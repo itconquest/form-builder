@@ -1,5 +1,5 @@
 {
-  "name": "react-jsonschema-form",
+  "name": "form-builder",
   "version": "0.49.0",
   "description": "A simple React component capable of building HTML forms out of a JSON schema.",
   "scripts": {
@@ -10,22 +10,14 @@
     "cs-check": "prettier -l $npm_package_prettierOptions '{playground,src,test}/**/*.js'",
     "cs-format": "prettier $npm_package_prettierOptions '{playground,src,test}/**/*.js' --write",
     "dist": "npm run build:lib && npm run build:dist",
-    "lint": "eslint src test playground",
-    "precommit": "lint-staged",
+    
     "publish-to-gh-pages": "npm run build:playground && gh-pages --dist build/",
     "publish-to-npm": "npm run build:readme && npm run dist && npm publish",
     "start": "node devServer.js",
     "tdd": "cross-env NODE_ENV=test  mocha --compilers js:babel-register --watch --require ./test/setup-jsdom.js test/**/*_test.js",
     "test": " cross-env NODE_ENV=test   mocha --compilers js:babel-register --require ./test/setup-jsdom.js test/**/*_test.js"
   },
-  "prettierOptions": "--jsx-bracket-same-line --trailing-comma es5 --semi",
-  "lint-staged": {
-    "{playground,src,test}/**/*.js": [
-      "npm run lint",
-      "npm run cs-format",
-      "git add"
-    ]
-  },
+
   "main": "lib/index.js",
   "files": [
     "dist",
@@ -42,7 +34,10 @@
   "dependencies": {
     "jsonschema": "^1.0.2",
     "lodash.topath": "^4.5.2",
+    "mongodb": "^2.2.30",
+    "mongoose": "^4.11.3",
     "prop-types": "^15.5.8",
+    "react-jsonschema-form": "^0.49.0",
     "setimmediate": "^1.0.5"
   },
   "devDependencies": {
@@ -94,7 +89,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mozilla-services/react-jsonschema-form.git"
+    "url": "git+https://github.com/itconquest/form-builder.git"
   },
   "author": "Nicolas Perriault <nperriault@mozilla.com>",
   "keywords": [
@@ -103,5 +98,5 @@
     "json-schema"
   ],
   "license": "Apache-2.0",
-  "homepage": "https://github.com/mozilla-services/react-jsonschema-form#readme"
+  "homepage": "https://github.com/itconquest/form-builder.git#readme"
 }

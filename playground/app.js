@@ -276,7 +276,43 @@ class Selector extends Component {
     );
   }
 }
+class Docform extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { current: "Simple" };
+  }
 
+  shouldComponentUpdate(nextProps, nextState) {
+    return shouldRender(this, nextProps, nextState);
+  }
+
+  onLabelClick = label => {
+    return event => {
+      event.preventDefault();
+      this.setState({ current: label });
+      setImmediate(() => this.props.onSelected(samples[label]));
+    };
+  };
+
+  render() {
+    return (
+      <ul className="nav nav-pills">
+        {Object.keys(samples).map((label, i) => {
+          return (
+            <li
+              key={i}
+              role="presentation"
+              className={this.state.current === label ? "active" : ""}>
+              <a href="#" onClick={this.onLabelClick(label)}>
+                {label}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+}
 function ThemeSelector({ theme, select }) {
   const themeSchema = {
     type: "string",
@@ -418,7 +454,7 @@ class App extends Component {
     return (
       <div className="container-fluid">
         <div className="page-header">
-          <h1>react-jsonschema-form</h1>
+          <h1>FV jsonschema form</h1>
           <div className="row">
             <div className="col-sm-8">
               <Selector onSelected={this.load} />
@@ -431,9 +467,7 @@ class App extends Component {
                 <div />
               </Form>
             </div>
-            <div className="col-sm-2">
-              <ThemeSelector theme={theme} select={this.onThemeSelected} />
-            </div>
+
           </div>
         </div>
         <div className="col-sm-7">
