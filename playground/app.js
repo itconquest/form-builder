@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { render } from "react-dom";
 import Codemirror from "react-codemirror";
 import "codemirror/mode/javascript/javascript";
+import axios from 'axios'
 
 import { shouldRender } from "../src/utils";
 import { samples } from "./samples";
@@ -55,94 +56,7 @@ const cmOptions = {
   indentWithTabs: false,
   tabSize: 2,
 };
-const themes = {
-  default: {
-    stylesheet:
-      "//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css",
-  },
-  cerulean: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/cerulean/bootstrap.min.css",
-  },
-  cosmo: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/cosmo/bootstrap.min.css",
-  },
-  cyborg: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/cyborg/bootstrap.min.css",
-    editor: "blackboard",
-  },
-  darkly: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/darkly/bootstrap.min.css",
-    editor: "mbo",
-  },
-  flatly: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/flatly/bootstrap.min.css",
-    editor: "ttcn",
-  },
-  journal: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/journal/bootstrap.min.css",
-  },
-  lumen: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/lumen/bootstrap.min.css",
-  },
-  paper: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/paper/bootstrap.min.css",
-  },
-  readable: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/readable/bootstrap.min.css",
-  },
-  sandstone: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/sandstone/bootstrap.min.css",
-    editor: "solarized",
-  },
-  simplex: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/simplex/bootstrap.min.css",
-    editor: "ttcn",
-  },
-  slate: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/slate/bootstrap.min.css",
-    editor: "monokai",
-  },
-  spacelab: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/spacelab/bootstrap.min.css",
-  },
-  "solarized-dark": {
-    stylesheet:
-      "//cdn.rawgit.com/aalpern/bootstrap-solarized/master/bootstrap-solarized-dark.css",
-    editor: "dracula",
-  },
-  "solarized-light": {
-    stylesheet:
-      "//cdn.rawgit.com/aalpern/bootstrap-solarized/master/bootstrap-solarized-light.css",
-    editor: "solarized",
-  },
-  superhero: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/superhero/bootstrap.min.css",
-    editor: "dracula",
-  },
-  united: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/united/bootstrap.min.css",
-  },
-  yeti: {
-    stylesheet:
-      "//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.6/yeti/bootstrap.min.css",
-    editor: "eclipse",
-  },
-};
+
 
 class GeoPosition extends Component {
   constructor(props) {
@@ -277,8 +191,10 @@ class Selector extends Component {
   }
 }
 class Docform extends Component {
-  constructor(props) {
+
+  constructor(props) { console.log("Docform");
     super(props);
+    console.log("Docform:", props);
     this.state = { current: "Simple" };
   }
 
@@ -290,13 +206,15 @@ class Docform extends Component {
     return event => {
       event.preventDefault();
       this.setState({ current: label });
+      console.log("label", label);
+      console.log("samples", samples);
       setImmediate(() => this.props.onSelected(samples[label]));
     };
   };
 
   render() {
     return (
-      <ul className="nav nav-pills">
+      <ul className="nav nav">
         {Object.keys(samples).map((label, i) => {
           return (
             <li
@@ -366,10 +284,12 @@ class CopyLink extends Component {
 
 class App extends Component {
   constructor(props) {
+    console.log("App");
     super(props);
     // initialize state with Simple data sample
     const { schema, uiSchema, formData, validate } = samples.Simple;
     this.state = {
+      list:[],
       form: false,
       schema,
       uiSchema,
@@ -381,8 +301,19 @@ class App extends Component {
       shareURL: null,
     };
   }
-
+  componentWillMount(){
+    console.log("componentWillMount");
+    axios.get("/api/template_list")
+        .then(res => {
+          var list = res.data;
+          this.setState({list:list});
+        })
+        .then(()=>{
+          console.log(this.state.list);
+        });
+  }
   componentDidMount() {
+    console.log("componentDidMount");
     const hash = document.location.hash.match(/#(.*)/);
     if (hash && typeof hash[1] === "string" && hash[1].length > 0) {
       try {
@@ -467,36 +398,39 @@ class App extends Component {
                 <div />
               </Form>
             </div>
-
           </div>
         </div>
-        <div className="col-sm-7">
-          <Editor
-            title="JSONSchema"
-            theme={editor}
-            code={toJson(schema)}
-            onChange={this.onSchemaEdited}
-          />
-          <div className="row">
-            <div className="col-sm-6">
-              <Editor
-                title="UISchema"
-                theme={editor}
-                code={toJson(uiSchema)}
-                onChange={this.onUISchemaEdited}
-              />
-            </div>
-            <div className="col-sm-6">
-              <Editor
-                title="formData"
-                theme={editor}
-                code={toJson(formData)}
-                onChange={this.onFormDataEdited}
-              />
+        <div className="row">
+          <div className="col-sm-2">
+            <Docform onSelected={this.load} formList={this.state.list} />
+          </div>
+          <div className="col-sm-6">
+            <Editor
+              title="JSONSchema"
+              theme={editor}
+              code={toJson(schema)}
+              onChange={this.onSchemaEdited}
+            />
+            <div className="row">
+              <div className="col-sm-6">
+                <Editor
+                  title="UISchema"
+                  theme={editor}
+                  code={toJson(uiSchema)}
+                  onChange={this.onUISchemaEdited}
+                />
+              </div>
+              <div className="col-sm-6">
+                <Editor
+                  title="formData"
+                  theme={editor}
+                  code={toJson(formData)}
+                  onChange={this.onFormDataEdited}
+                />
+              </div>
             </div>
           </div>
-        </div>
-        <div className="col-sm-5">
+          <div className="col-sm-4">
           {this.state.form &&
             <Form
               ArrayFieldTemplate={ArrayFieldTemplate}
@@ -527,6 +461,7 @@ class App extends Component {
                 </div>
               </div>
             </Form>}
+          </div>
         </div>
       </div>
     );

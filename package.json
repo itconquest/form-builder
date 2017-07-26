@@ -10,14 +10,12 @@
     "cs-check": "prettier -l $npm_package_prettierOptions '{playground,src,test}/**/*.js'",
     "cs-format": "prettier $npm_package_prettierOptions '{playground,src,test}/**/*.js' --write",
     "dist": "npm run build:lib && npm run build:dist",
-    
     "publish-to-gh-pages": "npm run build:playground && gh-pages --dist build/",
     "publish-to-npm": "npm run build:readme && npm run dist && npm publish",
     "start": "node devServer.js",
     "tdd": "cross-env NODE_ENV=test  mocha --compilers js:babel-register --watch --require ./test/setup-jsdom.js test/**/*_test.js",
     "test": " cross-env NODE_ENV=test   mocha --compilers js:babel-register --require ./test/setup-jsdom.js test/**/*_test.js"
   },
-
   "main": "lib/index.js",
   "files": [
     "dist",
@@ -32,10 +30,12 @@
     "react": "^15.0.0"
   },
   "dependencies": {
+    "axios": "^0.16.2",
+    "body-parser": "^1.17.2",
     "jsonschema": "^1.0.2",
     "lodash.topath": "^4.5.2",
     "mongodb": "^2.2.30",
-    "mongoose": "^4.11.3",
+    "mongoose": "^4.11.4",
     "prop-types": "^15.5.8",
     "react-jsonschema-form": "^0.49.0",
     "setimmediate": "^1.0.5"
