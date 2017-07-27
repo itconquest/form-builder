@@ -5,19 +5,13 @@ import "codemirror/mode/javascript/javascript";
 import axios from 'axios'
 
 import { shouldRender } from "../src/utils";
-import { samples } from "./samples";
+
 import Form from "../src";
 
 // Import a few CodeMirror themes; these are used to match alternative
 // bootstrap ones.
 import "codemirror/lib/codemirror.css";
-import "codemirror/theme/dracula.css";
-import "codemirror/theme/blackboard.css";
-import "codemirror/theme/mbo.css";
-import "codemirror/theme/ttcn.css";
-import "codemirror/theme/solarized.css";
-import "codemirror/theme/monokai.css";
-import "codemirror/theme/eclipse.css";
+
 
 // Patching CodeMirror#componentWillReceiveProps so it's executed synchronously
 // Ref https://github.com/mozilla-services/react-jsonschema-form/issues/174
@@ -153,49 +147,24 @@ class Editor extends Component {
   }
 }
 
-class Selector extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { current: "Simple" };
-  }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    return shouldRender(this, nextProps, nextState);
-  }
-
-  onLabelClick = label => {
-    return event => {
-      event.preventDefault();
-      this.setState({ current: label });
-      setImmediate(() => this.props.onSelected(samples[label]));
-    };
-  };
-
-  render() {
-    return (
-      <ul className="nav nav-pills">
-        {Object.keys(samples).map((label, i) => {
-          return (
-            <li
-              key={i}
-              role="presentation"
-              className={this.state.current === label ? "active" : ""}>
-              <a href="#" onClick={this.onLabelClick(label)}>
-                {label}
-              </a>
-            </li>
-          );
-        })}
-      </ul>
-    );
-  }
-}
 class Docform extends Component {
 
   constructor(props) { console.log("Docform");
     super(props);
-    console.log("Docform:", props);
-    this.state = { current: "Simple" };
+    this.state = { current: false, list:[] };
+  }
+  componentWillMount(){
+    console.log("Docform:componentWillMount");
+    axios.get("/api/template/list")
+        .then(res => {
+          var list = res.data;
+          this.setState({list:list});
+        })
+        .then(()=>{
+          this.setState({ current: this.state.list[0].id });
+          setImmediate(() => this.props.onSelected(this.state.current));
+        });
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -206,45 +175,33 @@ class Docform extends Component {
     return event => {
       event.preventDefault();
       this.setState({ current: label });
-      console.log("label", label);
-      console.log("samples", samples);
-      setImmediate(() => this.props.onSelected(samples[label]));
+      setImmediate(() => this.props.onSelected(label));
     };
   };
 
   render() {
     return (
-      <ul className="nav nav">
-        {Object.keys(samples).map((label, i) => {
-          return (
-            <li
-              key={i}
-              role="presentation"
-              className={this.state.current === label ? "active" : ""}>
-              <a href="#" onClick={this.onLabelClick(label)}>
-                {label}
-              </a>
-            </li>
-          );
-        })}
-      </ul>
+      <div style={{height:"750px", overflowY:"auto", border:"1px solid #ddd"}}>
+        <ul className="nav nav">
+          {this.state.list.map( ({id, name}, i) => {
+            return (
+              <li
+                key={i}
+                role="presentation"
+                className={this.state.current === id ? "active" : ""}>
+                <a href="#" onClick={this.onLabelClick(id)}>
+                  {name}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     );
   }
 }
-function ThemeSelector({ theme, select }) {
-  const themeSchema = {
-    type: "string",
-    enum: Object.keys(themes),
-  };
-  return (
-    <Form
-      schema={themeSchema}
-      formData={theme}
-      onChange={({ formData }) => select(formData, themes[formData])}>
-      <div />
-    </Form>
-  );
-}
+
+
 
 class CopyLink extends Component {
   onCopyClick = event => {
@@ -287,50 +244,27 @@ class App extends Component {
     console.log("App");
     super(props);
     // initialize state with Simple data sample
-    const { schema, uiSchema, formData, validate } = samples.Simple;
+    //const { schema, uiSchema, formData, validate } = samples.Simple;
     this.state = {
+      _id:false,
       list:[],
       form: false,
-      schema,
-      uiSchema,
-      formData,
-      validate,
+      schema:{},
+      uiSchema:{},
+      formData:{},
+      validate:{},
       editor: "default",
       theme: "default",
       liveValidate: true,
       shareURL: null,
     };
   }
-  componentWillMount(){
-    console.log("componentWillMount");
-    axios.get("/api/template_list")
-        .then(res => {
-          var list = res.data;
-          this.setState({list:list});
-        })
-        .then(()=>{
-          console.log(this.state.list);
-        });
-  }
-  componentDidMount() {
-    console.log("componentDidMount");
-    const hash = document.location.hash.match(/#(.*)/);
-    if (hash && typeof hash[1] === "string" && hash[1].length > 0) {
-      try {
-        this.load(JSON.parse(atob(hash[1])));
-      } catch (err) {
-        alert("Unable to load form setup data.");
-      }
-    } else {
-      this.load(samples.Simple);
-    }
-  }
 
   shouldComponentUpdate(nextProps, nextState) {
     return shouldRender(this, nextProps, nextState);
   }
-
   load = data => {
+
     // Reset the ArrayFieldTemplate whenever you load new data
     const { ArrayFieldTemplate } = data;
     // force resetting form component instance
@@ -338,7 +272,30 @@ class App extends Component {
       this.setState({ ...data, form: true, ArrayFieldTemplate })
     );
   };
-
+  loadForm = id => {
+    axios.get("/api/template/"+id)
+        .then(res => {
+          var data = res.data;
+          return data;
+        })
+        .then((data)=>{
+          console.log(data);
+          // Reset the ArrayFieldTemplate whenever you load new data
+          const { ArrayFieldTemplate } = data;
+          // force resetting form component instance
+          this.setState({ form: false }, _ =>
+            this.setState({ ...data, _id:id, form: true, ArrayFieldTemplate })
+          );
+        });
+  };
+  onSubmitData = ({_id, schema, uiSchema}) => {
+    let data = {label:schema.title, fieldSchema:schema, uiSchema:uiSchema};
+    console.log('submitting...', data);
+    axios.post("/api/template/"+this.state._id, data)
+        .then((data)=>{
+          console.log(data);
+        });
+  }
   onSchemaEdited = schema => this.setState({ schema, shareURL: null });
 
   onUISchemaEdited = uiSchema => this.setState({ uiSchema, shareURL: null });
@@ -371,6 +328,7 @@ class App extends Component {
 
   render() {
     const {
+      _id,
       schema,
       uiSchema,
       formData,
@@ -388,7 +346,7 @@ class App extends Component {
           <h1>FV jsonschema form</h1>
           <div className="row">
             <div className="col-sm-8">
-              <Selector onSelected={this.load} />
+
             </div>
             <div className="col-sm-2">
               <Form
@@ -402,7 +360,7 @@ class App extends Component {
         </div>
         <div className="row">
           <div className="col-sm-2">
-            <Docform onSelected={this.load} formList={this.state.list} />
+            <Docform onSelected={this.loadForm} />
           </div>
           <div className="col-sm-6">
             <Editor
@@ -438,9 +396,9 @@ class App extends Component {
               schema={schema}
               uiSchema={uiSchema}
               formData={formData}
+              _id={_id}
               onChange={this.onFormDataChange}
-              onSubmit={({ formData }) =>
-                console.log("submitted formData", formData)}
+              onSubmit={this.onSubmitData}
               fields={{ geo: GeoPosition }}
               validate={validate}
               onBlur={(id, value) =>
@@ -454,10 +412,7 @@ class App extends Component {
                   </button>
                 </div>
                 <div className="col-sm-9 text-right">
-                  <CopyLink
-                    shareURL={this.state.shareURL}
-                    onShare={this.onShare}
-                  />
+
                 </div>
               </div>
             </Form>}
